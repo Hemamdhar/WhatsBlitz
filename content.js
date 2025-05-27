@@ -1,13 +1,26 @@
+function wait(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 function sendMessage(contact) {
   const messageBox = document.querySelector("[contenteditable='true']");
-  if (!messageBox) return alert("Message box not found!");
-
-  const name = contact.name;
-  const message = contact.message.replace("{{name}}", name);
-
+  if (!messageBox) {
+    alert("Message box not found!");
+    throw new Error("Message box not found!");
+  }
+  const message = contact.message.replace("{{name}}", contact.name);
   messageBox.innerHTML = message;
   messageBox.dispatchEvent(new InputEvent("input", { bubbles: true }));
-  document.querySelector("span[data-icon='send']").click();
+  const sendBtn = document.querySelector("span[data-icon='send']");
+  if (!sendBtn) {
+    alert("Send button not found!");
+    throw new Error("Send button not found!");
+  }
+  sendBtn.click();
+}
+
+function openChat(phone) {
+  location.href = `https://web.whatsapp.com/send?phone=${phone}`;
 }
 
 async function startMessaging() {
@@ -23,29 +36,31 @@ async function startMessaging() {
       openChat(contact.number);
       await wait(4000);
       sendMessage(contact);
-      logs.push({ number: contact.number, status: "sent", time: new Date().toISOString() });
+      logs.push({
+        number: contact.number,
+        status: "sent",
+        time: new Date().toISOString(),
+      });
     } catch (err) {
-      logs.push({ number: contact.number, status: "failed", error: err.message, time: new Date().toISOString() });
+      logs.push({
+        number: contact.number,
+        status: "failed",
+        error: err.message,
+        time: new Date().toISOString(),
+      });
     }
     await wait(Math.random() * 10000 + 5000);
   }
-
   localStorage.setItem("whatsblitz_logs", JSON.stringify(logs));
-}
-
-function wait(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
-function openChat(phone) {
-  location.href = `https://web.whatsapp.com/send?phone=${phone}`;
 }
 
 // Inject sidebar CSS
 const style = document.createElement("link");
 style.rel = "stylesheet";
 style.type = "text/css";
-style.href = chrome.runtime ? chrome.runtime.getURL("sidebar.css") : "sidebar.css";
+style.href = chrome.runtime
+  ? chrome.runtime.getURL("sidebar.css")
+  : "sidebar.css";
 document.head.appendChild(style);
 
 // Create sidebar

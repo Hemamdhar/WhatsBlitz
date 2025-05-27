@@ -1,5 +1,9 @@
 function parseFile() {
   const file = document.getElementById("fileInput").files[0];
+  if (!file) {
+    alert("Please select a file.");
+    return;
+  }
   const reader = new FileReader();
   reader.onload = (e) => {
     const workbook = XLSX.read(e.target.result, { type: "binary" });
