@@ -1,0 +1,59 @@
+function sendMessage(contact) {
+  const messageBox = document.querySelector("[contenteditable='true']");
+  if (!messageBox) return alert("Message box not found!");
+
+  const name = contact.name;
+  const message = contact.message.replace("{{name}}", name);
+
+  messageBox.innerHTML = message;
+  messageBox.dispatchEvent(new InputEvent("input", { bubbles: true }));
+  document.querySelector("span[data-icon='send']").click();
+}
+
+async function startMessaging() {
+  const contacts = JSON.parse(localStorage.getItem("whatsblitz_data"));
+  if (!contacts || !contacts.length) {
+    alert("No contacts found in localStorage!");
+    return;
+  }
+  const logs = [];
+
+  for (let contact of contacts) {
+    try {
+      openChat(contact.number);
+      await wait(4000);
+      sendMessage(contact);
+      logs.push({ number: contact.number, status: "sent", time: new Date().toISOString() });
+    } catch (err) {
+      logs.push({ number: contact.number, status: "failed", error: err.message, time: new Date().toISOString() });
+    }
+    await wait(Math.random() * 10000 + 5000);
+  }
+
+  localStorage.setItem("whatsblitz_logs", JSON.stringify(logs));
+}
+
+function wait(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function openChat(phone) {
+  location.href = `https://web.whatsapp.com/send?phone=${phone}`;
+}
+
+// Inject sidebar CSS
+const style = document.createElement("link");
+style.rel = "stylesheet";
+style.type = "text/css";
+style.href = chrome.runtime ? chrome.runtime.getURL("sidebar.css") : "sidebar.css";
+document.head.appendChild(style);
+
+// Create sidebar
+const sidebar = document.createElement("div");
+sidebar.id = "whatsblitz-sidebar";
+sidebar.innerHTML = `
+  <h4>WhatsBlitz</h4>
+  <button id="startNow">Start</button>
+`;
+document.body.appendChild(sidebar);
+document.getElementById("startNow").onclick = startMessaging;

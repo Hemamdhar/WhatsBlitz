@@ -1,0 +1,10 @@
+#whatsblitz-sidebar {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  width: 200px;
+  background: white;
+  border: 1px solid gray;
+  padding: 10px;
+  z-index: 100000;
+}
